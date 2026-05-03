@@ -16,12 +16,17 @@ export interface AiQueryResult {
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly openai: OpenAI;
+  private readonly openai: OpenAI | null;
 
   constructor(private readonly configService: ConfigService) {
-    this.openai = new OpenAI({
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
-    });
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    // Make OpenAI optional — app starts without it, AI features return graceful fallback
+    this.openai = apiKey && apiKey !== 'sk-placeholder'
+      ? new OpenAI({ apiKey })
+      : null;
+    if (!this.openai) {
+      this.logger.warn('OPENAI_API_KEY not set — AI features disabled');
+    }
   }
 
   async chat(
@@ -29,6 +34,10 @@ export class AiService {
     organizationId: string,
     options: { model?: string; maxTokens?: number; temperature?: number } = {},
   ): Promise<AiQueryResult> {
+    if (!this.openai) {
+      return { answer: 'AI features are not configured. Please set OPENAI_API_KEY.', tokensUsed: 0, model: 'none' };
+    }
+
     const model = options.model ?? this.configService.get<string>('OPENAI_MODEL', 'gpt-4o');
     const maxTokens = options.maxTokens ?? this.configService.get<number>('OPENAI_MAX_TOKENS', 4096);
     const temperature = options.temperature ?? this.configService.get<number>('OPENAI_TEMPERATURE', 0.7);
@@ -55,6 +64,7 @@ export class AiService {
   }
 
   async generateInsights(data: Record<string, unknown>, organizationId: string): Promise<string> {
+    if (!this.openai) return 'AI insights not available — OPENAI_API_KEY not configured.';
     const result = await this.chat(
       [
         {
@@ -74,6 +84,7 @@ export class AiService {
     data: Record<string, unknown>,
     organizationId: string,
   ): Promise<string> {
+    if (!this.openai) return 'AI reports not available — OPENAI_API_KEY not configured.';
     const result = await this.chat(
       [
         {
