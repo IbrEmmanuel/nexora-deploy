@@ -1,0 +1,21 @@
+{
+  "name": "NexoraGrid",
+  "short_name": "NexoraGrid",
+  "description": "AI-Powered Business Infrastructure",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07071a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

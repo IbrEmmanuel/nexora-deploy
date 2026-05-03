@@ -1,0 +1,165 @@
+version: '3.9'
+
+services:
+  # PostgreSQL - primary relational database
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexoragrid_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nexora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexora_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-nexoragrid}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-nexora} -d ${POSTGRES_DB:-nexoragrid}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexoragrid_network
+
+  # MongoDB - document store for analytics & logs
+  mongodb:
+    image: mongo:7.0
+    container_name: nexoragrid_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-nexora}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-nexora_secret}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-nexoragrid}
+    ports:
+      - '${MONGO_PORT:-27017}:27017'
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexoragrid_network
+
+  # Redis - caching, sessions, queues
+  redis:
+    image: redis:7.2-alpine
+    container_name: nexoragrid_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-nexora_redis_secret} --appendonly yes
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-nexora_redis_secret}', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexoragrid_network
+
+  # Backend - NestJS API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: nexoragrid_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexora}:${POSTGRES_PASSWORD:-nexora_secret}@postgres:5432/${POSTGRES_DB:-nexoragrid}
+      MONGODB_URI: mongodb://${MONGO_USER:-nexora}:${MONGO_PASSWORD:-nexora_secret}@mongodb:27017/${MONGO_DB:-nexoragrid}?authSource=admin
+      REDIS_URL: redis://:${REDIS_PASSWORD:-nexora_redis_secret}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_me_refresh_in_production}
+      PORT: ${BACKEND_PORT:-4000}
+    ports:
+      - '${BACKEND_PORT:-4000}:4000'
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nexoragrid_network
+
+  # Frontend - Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: nexoragrid_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+      NEXT_PUBLIC_GRAPHQL_URL: ${NEXT_PUBLIC_GRAPHQL_URL:-http://localhost:4000/graphql}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:4000/graphql}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change_me_in_production}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+    ports:
+      - '${FRONTEND_PORT:-3000}:3000'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - nexoragrid_network
+
+  # pgAdmin - PostgreSQL GUI (dev only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: nexoragrid_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@nexoragrid.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - '${PGADMIN_PORT:-5050}:80'
+    depends_on:
+      - postgres
+    networks:
+      - nexoragrid_network
+    profiles:
+      - tools
+
+  # Redis Commander - Redis GUI (dev only)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: nexoragrid_redis_commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-nexora_redis_secret}
+    ports:
+      - '${REDIS_COMMANDER_PORT:-8081}:8081'
+    depends_on:
+      - redis
+    networks:
+      - nexoragrid_network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  nexoragrid_network:
+    driver: bridge

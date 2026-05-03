@@ -1,0 +1,411 @@
+// =============================================================================
+// NexoraGrid - Prisma Schema
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+  GUEST
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  UNPAID
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+  ON_HOLD
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+// =============================================================================
+// Models
+// =============================================================================
+
+model Organization {
+  id                   String             @id @default(uuid())
+  name                 String
+  slug                 String             @unique
+  logoUrl              String?
+  website              String?
+  industry             String?
+  plan                 SubscriptionPlan   @default(FREE)
+  subscriptionStatus   SubscriptionStatus @default(ACTIVE)
+  billingInterval      BillingInterval    @default(MONTHLY)
+  trialEndsAt          DateTime?
+  subscriptionEndsAt   DateTime?
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // Relations
+  users       User[]
+  projects    Project[]
+  invitations Invitation[]
+  apiKeys     ApiKey[]
+  aiAgents    AiAgent[]
+  energyDevices EnergyDevice[]
+  integrationConnections IntegrationConnection[]
+
+  @@index([slug])
+  @@map("organizations")
+}
+
+model User {
+  id             String     @id @default(uuid())
+  email          String     @unique
+  password       String?
+  firstName      String
+  lastName       String
+  displayName    String
+  avatarUrl      String?
+  bio            String?
+  jobTitle       String?
+  department     String?
+  phoneNumber    String?
+  timezone       String     @default("UTC")
+  locale         String     @default("en")
+  role           UserRole   @default(MEMBER)
+  status         UserStatus @default(PENDING_VERIFICATION)
+  organizationId String
+  lastLoginAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // OAuth
+  googleId String? @unique
+  githubId String? @unique
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects     ProjectMember[]
+  preferences  UserPreferences?
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("users")
+}
+
+model UserPreferences {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  theme               String   @default("system")
+  emailNotifications  Boolean  @default(true)
+  pushNotifications   Boolean  @default(true)
+  weeklyDigest        Boolean  @default(true)
+  language            String   @default("en")
+  dateFormat          String   @default("MM/DD/YYYY")
+  timeFormat          String   @default("12h")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Project {
+  id             String        @id @default(uuid())
+  name           String
+  slug           String
+  description    String?
+  status         ProjectStatus @default(ACTIVE)
+  organizationId String
+  ownerId        String?
+  color          String?
+  iconUrl        String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      ProjectMember[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  role      UserRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model Invitation {
+  id             String           @id @default(uuid())
+  email          String
+  role           UserRole         @default(MEMBER)
+  organizationId String
+  invitedById    String?
+  token          String           @unique @default(uuid())
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([token])
+  @@map("invitations")
+}
+
+model ApiKey {
+  id             String    @id @default(uuid())
+  name           String
+  keyHash        String    @unique
+  keyPrefix      String
+  organizationId String
+  createdById    String?
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  scopes         String[]  @default([])
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([keyHash])
+  @@map("api_keys")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String?
+  action         String
+  resourceType   String
+  resourceId     String?
+  oldValues      Json?
+  newValues      Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// =============================================================================
+// AI Agents
+// =============================================================================
+
+enum AgentRole {
+  SALES
+  SUPPORT
+  OPERATIONS
+  FINANCE
+  EMAIL
+  CUSTOM
+}
+
+enum AgentStatus {
+  ACTIVE
+  IDLE
+  PAUSED
+  LEARNING
+}
+
+model AiAgent {
+  id             String      @id @default(uuid())
+  name           String
+  role           AgentRole
+  status         AgentStatus @default(IDLE)
+  systemPrompt   String?
+  capabilities   String[]    @default([])
+  organizationId String
+  createdById    String?
+  tasksCompleted Int         @default(0)
+  successRate    Float       @default(100)
+  lastActiveAt   DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tasks        AgentTask[]
+
+  @@index([organizationId])
+  @@map("ai_agents")
+}
+
+model AgentTask {
+  id             String   @id @default(uuid())
+  agentId        String
+  taskType       String
+  payload        Json     @default("{}")
+  result         Json?
+  status         String   @default("pending")
+  organizationId String
+  startedAt      DateTime?
+  completedAt    DateTime?
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  agent AiAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([organizationId, createdAt])
+  @@map("agent_tasks")
+}
+
+// =============================================================================
+// Energy & IoT
+// =============================================================================
+
+enum DeviceType {
+  SOLAR_PANEL
+  BATTERY
+  INVERTER
+  EV_CHARGER
+  SMART_METER
+  WIND_TURBINE
+  SENSOR
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+  WARNING
+  FAULT
+  MAINTENANCE
+}
+
+// =============================================================================
+// Integrations
+// =============================================================================
+
+model IntegrationConnection {
+  id             String   @id @default(uuid())
+  organizationId String
+  integrationId  String   // e.g. 'stripe', 'whatsapp', 'slack'
+  status         String   @default("disconnected") // connected | disconnected | error
+  credentials    Json     @default("{}") // encrypted at app level
+  metadata       Json     @default("{}") // webhook urls, account info, etc.
+  lastTestedAt   DateTime?
+  lastErrorAt    DateTime?
+  lastError      String?
+  totalCalls     Int      @default(0)
+  connectedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, integrationId])
+  @@index([organizationId])
+  @@map("integration_connections")
+}
+
+model EnergyDevice {
+  id             String       @id @default(uuid())
+  name           String
+  deviceType     DeviceType
+  status         DeviceStatus @default(ONLINE)
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  organizationId String
+  metadata       Json         @default("{}")
+  lastSeenAt     DateTime?
+  installedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  readings     EnergyReading[]
+  alerts       EnergyAlert[]
+
+  @@index([organizationId])
+  @@index([deviceType])
+  @@map("energy_devices")
+}
+
+model EnergyReading {
+  id        String   @id @default(uuid())
+  deviceId  String
+  metric    String
+  value     Float
+  unit      String
+  timestamp DateTime @default(now())
+
+  device EnergyDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, timestamp])
+  @@map("energy_readings")
+}
+
+model EnergyAlert {
+  id         String   @id @default(uuid())
+  deviceId   String
+  severity   String
+  message    String
+  resolved   Boolean  @default(false)
+  resolvedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  device EnergyDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@map("energy_alerts")
+}

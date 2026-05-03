@@ -1,0 +1,27 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Mutation {
+  aiChat(message: String!): String!
+
+  """Refresh access token via GraphQL"""
+  refreshToken(refreshToken: String!): String!
+  updateUser(id: ID!, input: UpdateUserDto!): String!
+}
+
+type Query {
+  me: String!
+  user(id: ID!): String!
+}
+
+input UpdateUserDto {
+  avatarUrl: String
+  bio: String
+  department: String
+  firstName: String
+  jobTitle: String
+  lastName: String
+  locale: String
+  timezone: String
+}
