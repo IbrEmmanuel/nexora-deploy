@@ -2,14 +2,20 @@
   "name": "nexoragrid",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["frontend", "backend", "shared"],
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "start:backend": "cd backend && node dist/main",
+    "build:backend": "cd backend && npm install && npm run build"
   },
   "devDependencies": {
     "turbo": "^1.13.0",
