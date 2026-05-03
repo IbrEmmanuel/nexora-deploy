@@ -212,7 +212,7 @@ export class OrganizationsService {
 
     const feed: Array<{ id: string; type: string; title: string; description: string; timestamp: Date; actor: string }> = [];
 
-    recentUsers.forEach((u) => {
+    recentUsers.forEach((u: { id: string; firstName: string; lastName: string; createdAt: Date }) => {
       feed.push({
         id: `user-${u.id}`, type: 'user_joined',
         title: 'New team member joined',
@@ -221,7 +221,7 @@ export class OrganizationsService {
       });
     });
 
-    recentAgents.forEach((a) => {
+    recentAgents.forEach((a: { id: string; name: string; role: string; tasksCompleted: number; lastActiveAt: Date | null }) => {
       if (a.lastActiveAt) {
         feed.push({
           id: `agent-${a.id}`, type: 'ai_query',
