@@ -2,7 +2,7 @@ import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
 export default withAuth(
-  function middleware(req) {
+  function middleware(_req) {
     // If authenticated but no accessToken in token, let it through —
     // the page-level components handle the stale-session UX
     return NextResponse.next();
