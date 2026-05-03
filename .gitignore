@@ -20,7 +20,7 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
-.env.production
+# .env.production is intentionally committed (no secrets, only public URLs)
 
 # Logs
 logs/

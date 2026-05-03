@@ -3,5 +3,10 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "env": {
+    "NEXTAUTH_URL": "https://nexora-deploy-frontend.vercel.app",
+    "NEXT_PUBLIC_APP_URL": "https://nexora-deploy-frontend.vercel.app",
+    "NEXT_PUBLIC_APP_NAME": "NexoraGrid"
+  }
 }
