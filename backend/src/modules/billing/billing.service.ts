@@ -1,8 +1,9 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { SubscriptionPlan } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from '../../common/prisma/prisma.service';
+
+type SubscriptionPlan = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE';
 
 @Injectable()
 export class BillingService {
@@ -153,22 +154,22 @@ export class BillingService {
 
   private getPlanFromPriceId(priceId: string | undefined): SubscriptionPlan {
     const config = this.configService;
-    if (!priceId) return SubscriptionPlan.FREE;
+    if (!priceId) return 'FREE';
     if (
       priceId === config.get('STRIPE_PRICE_STARTER_MONTHLY') ||
       priceId === config.get('STRIPE_PRICE_STARTER_YEARLY')
     )
-      return SubscriptionPlan.STARTER;
+      return 'STARTER';
     if (
       priceId === config.get('STRIPE_PRICE_PRO_MONTHLY') ||
       priceId === config.get('STRIPE_PRICE_PRO_YEARLY')
     )
-      return SubscriptionPlan.PRO;
+      return 'PRO';
     if (
       priceId === config.get('STRIPE_PRICE_ENTERPRISE_MONTHLY') ||
       priceId === config.get('STRIPE_PRICE_ENTERPRISE_YEARLY')
     )
-      return SubscriptionPlan.ENTERPRISE;
-    return SubscriptionPlan.FREE;
+      return 'ENTERPRISE';
+    return 'FREE';
   }
 }

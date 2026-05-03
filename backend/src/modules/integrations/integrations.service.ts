@@ -7,7 +7,6 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { randomBytes, createHash, createCipheriv, createDecipheriv } from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
 
 // ── Catalog definition ────────────────────────────────────────────────────────
 
@@ -198,7 +197,7 @@ export class IntegrationsService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return rows.map((r) => ({
+    return rows.map((r: { id: string; integrationId: string; status: string; connectedAt: Date | null; lastTestedAt: Date | null; lastError: string | null; totalCalls: number; metadata: unknown; credentials: unknown }) => ({
       id: r.id,
       integrationId: r.integrationId,
       status: r.status,
@@ -236,8 +235,8 @@ export class IntegrationsService {
       }
     }
 
-    const encryptedCreds: Prisma.InputJsonValue = { encrypted: this.encrypt(credentials) };
-    const metaJson: Prisma.InputJsonValue = metadata as Prisma.InputJsonValue;
+    const encryptedCreds = { encrypted: this.encrypt(credentials) } as object;
+    const metaJson = metadata as object;
 
     const conn = await this.prisma.integrationConnection.upsert({
       where: { organizationId_integrationId: { organizationId, integrationId } },
@@ -396,9 +395,9 @@ export class IntegrationsService {
       this.prisma.organization.findUnique({ where: { id: organizationId } }),
     ]);
 
-    const connectedCount = connections.filter((c) => c.status === 'connected').length;
-    const errorCount = connections.filter((c) => c.status === 'error').length;
-    const totalCalls = connections.reduce((sum, c) => sum + c.totalCalls, 0);
+    const connectedCount = connections.filter((c: { status: string }) => c.status === 'connected').length;
+    const errorCount = connections.filter((c: { status: string }) => c.status === 'error').length;
+    const totalCalls = connections.reduce((sum: number, c: { totalCalls: number }) => sum + c.totalCalls, 0);
 
     return {
       apiKeyCount,

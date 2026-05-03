@@ -99,12 +99,12 @@ export class EnergyService {
     });
 
     const total = devices.length;
-    const online = devices.filter((d) => d.status === 'ONLINE').length;
-    const warnings = devices.filter((d) => d.status === 'WARNING').length;
-    const faults = devices.filter((d) => d.status === 'FAULT').length;
-    const totalAlerts = devices.reduce((s, d) => s + d.alerts.length, 0);
+    const online = devices.filter((d: { status: string }) => d.status === 'ONLINE').length;
+    const warnings = devices.filter((d: { status: string }) => d.status === 'WARNING').length;
+    const faults = devices.filter((d: { status: string }) => d.status === 'FAULT').length;
+    const totalAlerts = devices.reduce((s: number, d: { alerts: unknown[] }) => s + d.alerts.length, 0);
 
-    const byType = devices.reduce((acc: Record<string, number>, d) => {
+    const byType = devices.reduce((acc: Record<string, number>, d: { deviceType: string }) => {
       acc[d.deviceType] = (acc[d.deviceType] ?? 0) + 1;
       return acc;
     }, {});
