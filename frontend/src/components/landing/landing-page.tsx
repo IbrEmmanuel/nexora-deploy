@@ -13,6 +13,7 @@ import { useState } from "react";
 import { LandingNav } from "./landing-nav";
 import { LandingFooter } from "./landing-footer";
 import { LandingThemeProvider, useLandingTheme, t, T } from "./landing-theme";
+import { cn } from "@/lib/utils";
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export function LandingPage() {
@@ -52,57 +53,61 @@ function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-      {/* Grid background */}
-      <div
-        className={`absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.04)_1px,transparent_1px)] bg-[size:60px_60px] transition-opacity duration-300 ${isDark ? "opacity-100" : "opacity-20"}`}
-      />
-
-      {/* Radial glows — dark only */}
+      {/* Mesh gradient orbs */}
       {isDark && (
         <>
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-cyan-500/8 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-purple-600/8 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none animate-float" />
+          <div className="absolute top-1/3 left-[15%] w-[500px] h-[500px] bg-cyan-500/8 rounded-full blur-[120px] pointer-events-none" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-1/3 right-[15%] w-[500px] h-[500px] bg-purple-600/8 rounded-full blur-[120px] pointer-events-none" />
         </>
       )}
-      {/* Light mode subtle gradient */}
       {!isDark && (
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/60 via-white to-cyan-50/40 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white to-cyan-50/60 pointer-events-none" />
       )}
 
-      {/* Glowing nodes — dark only */}
+      {/* Grid */}
+      <div className={cn(
+        "absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.04)_1px,transparent_1px)] bg-[size:60px_60px]",
+        isDark ? "opacity-100" : "opacity-20",
+      )} aria-hidden="true" />
+
+      {/* Glowing nodes */}
       {isDark && (
         <>
-          <div className="absolute top-1/4 left-[20%] w-2 h-2 bg-indigo-400 rounded-full shadow-[0_0_12px_4px_rgba(99,102,241,0.6)] animate-pulse" />
-          <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_10px_3px_rgba(6,182,212,0.6)] animate-pulse" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-purple-400 rounded-full shadow-[0_0_12px_4px_rgba(168,85,247,0.6)] animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute top-2/3 right-1/3 w-1.5 h-1.5 bg-indigo-300 rounded-full shadow-[0_0_10px_3px_rgba(165,180,252,0.6)] animate-pulse" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute top-1/4 left-[20%] w-2 h-2 bg-indigo-400 rounded-full shadow-[0_0_12px_4px_rgba(99,102,241,0.6)] animate-pulse" aria-hidden="true" />
+          <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_10px_3px_rgba(6,182,212,0.6)] animate-pulse" style={{ animationDelay: "0.5s" }} aria-hidden="true" />
+          <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-purple-400 rounded-full shadow-[0_0_12px_4px_rgba(168,85,247,0.6)] animate-pulse" style={{ animationDelay: "1s" }} aria-hidden="true" />
+          <div className="absolute top-2/3 right-1/3 w-1.5 h-1.5 bg-indigo-300 rounded-full shadow-[0_0_10px_3px_rgba(165,180,252,0.6)] animate-pulse" style={{ animationDelay: "1.5s" }} aria-hidden="true" />
         </>
       )}
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className={`inline-flex items-center gap-2 border rounded-full px-4 py-1.5 text-sm mb-8 ${t(T.sectionBadge.indigo, theme)}`}>
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className={cn(
+            "inline-flex items-center gap-2 border rounded-full px-4 py-1.5 text-sm mb-8",
+            t(T.sectionBadge.indigo, theme),
+          )}>
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
             AI-Powered Business Infrastructure OS
-            <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? "bg-indigo-500/20 text-indigo-200" : "bg-indigo-100 text-indigo-700"}`}>v2.0</span>
+            <span className={cn("text-xs px-2 py-0.5 rounded-full", isDark ? "bg-indigo-500/20 text-indigo-200" : "bg-indigo-100 text-indigo-700")}>v2.0</span>
           </div>
         </motion.div>
 
+        {/* Animated gradient headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
           className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] mb-6"
         >
           The Operating System
           <br />
-          <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent animate-gradient bg-[length:200%_200%]">
             for Modern Business
           </span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-          className={`text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed ${t(T.textMuted, theme)}`}
+          className={cn("text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed", t(T.textMuted, theme))}
         >
           Unify AI automation, infrastructure monitoring, and enterprise intelligence in one platform.
           Built for energy companies, enterprises, and governments.
@@ -116,21 +121,59 @@ function HeroSection() {
             href="/register"
             className="group flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105"
           >
-            Start Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            Start Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </Link>
           <Link
             href="#demo"
-            className={`group flex items-center gap-2 border font-semibold px-8 py-3.5 rounded-xl transition-all ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-white" : "bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800 shadow-sm"}`}
+            className={cn(
+              "group flex items-center gap-2 border font-semibold px-8 py-3.5 rounded-xl transition-all",
+              isDark ? "bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-white" : "bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800 shadow-sm",
+            )}
           >
-            <Play className="w-4 h-4 text-indigo-500" />
+            <Play className="w-4 h-4 text-indigo-500" aria-hidden="true" />
             Book Enterprise Demo
           </Link>
         </motion.div>
 
+        {/* Floating dashboard preview card */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }}
+          className="animate-float mb-16"
+        >
+          <div className={cn(
+            "relative rounded-2xl border overflow-hidden shadow-2xl mx-auto max-w-2xl",
+            isDark ? "border-white/10 bg-zinc-950/80 backdrop-blur-xl shadow-indigo-500/10" : "border-slate-200 bg-white shadow-slate-200",
+          )}>
+            {/* Browser chrome */}
+            <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b", isDark ? "border-white/5 bg-white/[0.02]" : "border-slate-100 bg-slate-50")}>
+              <div className="w-2.5 h-2.5 rounded-full bg-red-400/70" aria-hidden="true" />
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" aria-hidden="true" />
+              <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" aria-hidden="true" />
+              <div className={cn("flex-1 mx-3 rounded px-2 py-0.5 text-xs", isDark ? "bg-white/5 text-white/30" : "bg-white text-slate-400 border border-slate-200")}>
+                app.nexoragrid.com/dashboard
+              </div>
+            </div>
+            {/* Mini dashboard */}
+            <div className="p-4 grid grid-cols-4 gap-2">
+              {[
+                { label: "Revenue", value: "$4.28M", color: "text-emerald-500" },
+                { label: "AI Tasks", value: "8,420", color: "text-indigo-500" },
+                { label: "Energy kWh", value: "2.34M", color: "text-cyan-500" },
+                { label: "Uptime", value: "99.99%", color: "text-purple-500" },
+              ].map((m) => (
+                <div key={m.label} className={cn("rounded-xl p-3 text-center", isDark ? "bg-white/[0.03] border border-white/[0.05]" : "bg-slate-50 border border-slate-100")}>
+                  <div className={cn("text-lg font-bold", m.color)}>{m.value}</div>
+                  <div className={cn("text-[10px] mt-0.5", isDark ? "text-white/30" : "text-slate-400")}>{m.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
         {/* Stats bar */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
-          className={`grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border ${t(T.statsGrid, theme)}`}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
+          className={cn("grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border", t(T.statsGrid, theme))}
         >
           {[
             { value: "$2.4B+", label: "Assets Monitored" },
@@ -138,9 +181,9 @@ function HeroSection() {
             { value: "500+",   label: "Enterprise Clients" },
             { value: "140ms",  label: "Avg Response Time" },
           ].map((s) => (
-            <div key={s.label} className={`${t(T.statsBg, theme)} px-6 py-5 text-center`}>
+            <div key={s.label} className={cn(t(T.statsBg, theme), "px-6 py-5 text-center")}>
               <div className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-cyan-500 bg-clip-text text-transparent">{s.value}</div>
-              <div className={`text-xs mt-1 ${t(T.textFaint, theme)}`}>{s.label}</div>
+              <div className={cn("text-xs mt-1", t(T.textFaint, theme))}>{s.label}</div>
             </div>
           ))}
         </motion.div>
@@ -153,18 +196,25 @@ function HeroSection() {
 function TrustedBySection() {
   const { theme } = useLandingTheme();
   const logos = ["EnergyCore","FinVault","TeleGrid","NovaCorp","QuantumBank","ArcLight","DataStream","OmniTech"];
+  // Duplicate for seamless marquee
+  const doubled = [...logos, ...logos];
   return (
-    <section className={`py-16 border-y ${t(T.trustedBg, theme)}`}>
+    <section className={cn("py-16 border-y", t(T.trustedBg, theme))}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <p className={`text-center text-sm uppercase tracking-widest mb-10 ${t(T.trustedLabel, theme)}`}>
+        <p className={cn("text-center text-sm uppercase tracking-widest mb-10", t(T.trustedLabel, theme))}>
           Trusted by industry leaders worldwide
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-          {logos.map((name) => (
-            <div key={name} className={`transition-colors font-bold text-lg tracking-tight select-none ${t(T.trustedLogo, theme)}`}>
-              {name}
-            </div>
-          ))}
+        <div className="marquee-container">
+          <div className="marquee-track">
+            {doubled.map((name, i) => (
+              <div
+                key={`${name}-${i}`}
+                className={cn("mx-8 transition-colors font-bold text-lg tracking-tight select-none shrink-0", t(T.trustedLogo, theme))}
+              >
+                {name}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -185,14 +235,14 @@ function FeaturesSection() {
   const { theme } = useLandingTheme();
   return (
     <section id="features" className="py-28 relative">
-      <div className={`absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/10 to-transparent pointer-events-none ${theme === "light" ? "opacity-0" : ""}`} />
+      <div className={cn(`absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/10 to-transparent pointer-events-none`, theme === "light" ? "opacity-0" : "")} aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16">
-          <div className={`inline-flex items-center gap-2 border rounded-full px-4 py-1.5 text-sm mb-4 ${t(T.sectionBadge.indigo, theme)}`}>
-            <Zap className="w-3.5 h-3.5" /> Platform Features
+          <div className={cn("inline-flex items-center gap-2 border rounded-full px-4 py-1.5 text-sm mb-4", t(T.sectionBadge.indigo, theme))}>
+            <Zap className="w-3.5 h-3.5" aria-hidden="true" /> Platform Features
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">Everything your enterprise needs</h2>
-          <p className={`text-lg max-w-2xl mx-auto ${t(T.textMuted, theme)}`}>
+          <p className={cn("text-lg max-w-2xl mx-auto", t(T.textMuted, theme))}>
             One unified platform replacing dozens of point solutions. Built for scale from day one.
           </p>
         </div>
@@ -202,15 +252,18 @@ function FeaturesSection() {
               key={f.title}
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.08 }}
-              className={`group relative border rounded-2xl p-6 transition-all duration-300 ${t(T.featureCard, theme)}`}
+              className={cn(
+                "group relative border rounded-2xl p-6 transition-all duration-300 hover:gradient-border",
+                t(T.featureCard, theme),
+              )}
             >
-              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${f.color} mb-5 shadow-lg`}>
-                <f.icon className="w-5 h-5 text-white" />
+              <div className={cn("inline-flex p-3 rounded-xl bg-gradient-to-br mb-5 shadow-lg", f.color)}>
+                <f.icon className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-              <p className={`text-sm leading-relaxed ${t(T.textMuted, theme)}`}>{f.desc}</p>
-              <div className={`mt-4 flex items-center gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity ${t(T.featureLearnMore, theme)}`}>
-                Learn more <ChevronRight className="w-3 h-3" />
+              <p className={cn("text-sm leading-relaxed", t(T.textMuted, theme))}>{f.desc}</p>
+              <div className={cn("mt-4 flex items-center gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity", t(T.featureLearnMore, theme))}>
+                Learn more <ChevronRight className="w-3 h-3" aria-hidden="true" />
               </div>
             </motion.div>
           ))}
